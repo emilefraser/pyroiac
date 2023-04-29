@@ -1,0 +1,1 @@
+vault read auth/approle/role/terraform/role-id

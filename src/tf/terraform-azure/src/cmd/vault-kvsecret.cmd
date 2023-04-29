@@ -1,0 +1,1 @@
+vault kv get -mount=kv github-emilefraser

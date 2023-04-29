@@ -1,0 +1,175 @@
+version: "3"
+
+# looks for other Taskfiles. Optional makes it exe normally if not foun
+#includes:
+#  docs: ./documentation # will look for ./documentation/Taskfile.yml
+#  docker: 
+#    taskfile: ./DockerTasks.yml
+#    optional: true 
+
+# config ones
+# output: outputgroup
+# silent: true/false 
+# method: checksum|timestamp
+# run: always|once|when_changed
+# set: [pipefail]
+# shopt: [globstar]
+vars:
+  TFPLAN: .tfplan
+
+
+#global env
+#env: 
+#  GREETING: Hey there
+
+# include other .env files
+#dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+
+tasks:
+  .build: 
+     dir: '{{.USER_WORKING_DIR}}' 
+     desc: Builds the task files to task folder
+     cmds:
+
+       - |
+         cat <<EOF> tasks/terraform-init.sh
+         #!/bin/bash
+
+         echo "Initializaing Terraform workspace..."
+         terraform init
+         EOF
+
+       - |
+         cat <<EOF> tasks/default.sh
+         #!/bin/bash
+         
+         echo Type task command to run tasks
+         echo command is one of docs fmt fmtcheck fumpt lint test testdeploy tfclean tools
+         EOF
+
+       - |
+         cat <<EOF> tasks/terraform-version.sh
+         #!/bin/bash
+         
+         echo "Getting terraform version..."
+         terraform version
+         EOF
+
+       - |
+         cat <<EOF> tasks/terraform-apply.sh
+         #!/bin/bash
+         
+         echo "Applying infrastructure..."
+         terraform apply \${1} --auto-approve
+         EOF
+
+       - |
+         cat <<EOF> tasks/terraform-destroy.sh
+         #!/bin/bash
+         
+         echo "Destroying infrastructure..."
+         terraform destroy --auto-approve
+         EOF
+
+       - |
+         cat <<EOF> tasks/terraform-plan.sh
+         #!/bin/bash
+         
+         echo "Planning infrastructure..."
+         terraform plan -out=\${1} -input=false -lock=false
+         EOF
+   
+       - |
+         cat <<EOF> tasks/terraform-format.sh
+         #!/bin/bash
+         
+         echo "Formatting terraform code..."
+         terraform fmt -diff -check -recursive
+         EOF
+
+       - |
+         cat <<EOF> tasks/terraform-clean.sh
+         #!/bin/bash
+         
+         echo "Cleaning terraform artefacts..."
+         rm -rf .archive
+         rm -rf .terraform
+         rm -f tfplan
+         rm -f terraform.tfstate
+         rm -f .terraform.lock.hcl
+         EOF
+
+       - |
+         cat <<EOF> tasks/terraform-initrecon.sh
+         #!/bin/bash
+
+         echo "Initializaing and Reconfiguring Terraform workspace..."
+         terraform init -reconfigure
+         EOF
+
+  default:
+     dir: '{{.USER_WORKING_DIR}}' 
+     desc: Runs the default task
+     cmds:
+       - sh tasks/default.sh
+
+  license:
+     dir: '{{.USER_WORKING_DIR}}' 
+     desc: Runs the default task
+     cmds:
+       - gh api /licenses/mit | jq -r .body > LICENSE
+       - sed -e "s/\[year\]/2023/gi" LICENSE > LICENSE_TEMP && mv LICENSE_TEMP LICENSE
+       - sed -e "s/\[fullname\]/Emile Fraser/gi" LICENSE > LICENSE_TEMP && mv LICENSE_TEMP LICENSE
+
+  init:
+    dir: '{{.USER_WORKING_DIR}}'
+    desc: Init terraform
+    cmds:
+       - sh tasks/terraform-init.sh
+
+  initrecon:
+    dir: '{{.USER_WORKING_DIR}}'
+    desc: Init terraform with reconfigure
+    cmds:
+       - sh tasks/terraform-initrecon..sh
+    # add dependency (run assets before init)
+    #deps: [assets]
+    #task specific env
+    #env: 
+    #  GREETING: Hey there
+
+  plan:
+    dir: '{{.USER_WORKING_DIR}}'
+    desc: Show terraform resources creation
+    cmds:
+      - sh tasks/terraform-plan.sh "{{.TFPLAN}}"
+
+  apply:
+    dir: '{{.USER_WORKING_DIR}}'
+    desc: Apply resources creation
+    cmds:
+     - sh tasks/terraform-apply.sh "{{.TFPLAN}}"
+
+  version:
+    dir: '{{.USER_WORKING_DIR}}'
+    desc: Gets the terraform version
+    cmds:
+     - sh tasks/terraform-version.sh
+
+  destroy:
+    dir: '{{.USER_WORKING_DIR}}'
+    desc: Destroys the terraform infrastructure
+    cmds:
+     - sh tasks/terraform-destroy.sh
+
+  format:
+    dir: '{{.USER_WORKING_DIR}}'
+    desc: Format the terraform code
+    cmds:
+     - sh tasks/terraform-format.sh
+
+  clean:
+    dir: '{{.USER_WORKING_DIR}}'
+    desc: Cleans all the terraform artefacts not needed
+    cmds:
+     - sh tasks/terraform-clean.sh

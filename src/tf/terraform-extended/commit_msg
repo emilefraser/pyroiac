@@ -1,0 +1,81 @@
+#!/bin/bash
+# 
+# Semantic versioning 
+#######################
+# MAJOR.MINOR.PATCH
+# BREAKING CHANGE: is MAJOR (start of body/footer)
+#      	           of type fix:, feat: & chore:
+# feat: is minor (type)
+# fix: is patch (type)
+#
+# Other types like chore:, docs:, style:, refactor:, perf:, test:, chore:, docs:, reactor:, style:
+# Commit Message
+########################
+# <type>[optional scope]: <description>
+#
+# [optional body]
+#
+# [optional footer(s)]
+#
+# Example 
+########################
+# fix(ABC-123): Caught Promise exception
+#
+# We did not catch the promise exception thrown ...
+# ....
+
+major="${1}"
+minor="${2}"
+patch="${3}"
+scope="${4}"
+desc="${5}"
+body="${6}"
+footer="${7}"
+
+if [ $patch == 1 ]
+then
+ commit_str="fix"
+elif [ $minor == 1 ]
+then
+  commit_str="feat"
+else 
+  commit_str="feat"
+fi
+
+if ! [ -z $scope ] 
+then
+  commit_str="$commit_str($scope)"
+fi
+  
+commit_str="$commit_str:"
+commit_str="$commit_str $desc"
+
+if ! [ -z "$body" ]
+then        
+  if [[ "$major" == 1 && -z "$footer" ]]
+  then
+    commit_str="$commit_str\n\nBREAKING CHANGE: $body"
+else
+    commit_str="$commit_str\n\n$body"
+  fi
+fi
+
+if ! [ -z "$footer" ]
+then
+  if [[ "$major" == 1 && ! -z "$body" ]]
+    then
+      commit_str="$commit_str\n\n$footer"
+  elif [[ "$major" == 1 && -z "$body" ]]
+  then
+          commit_str="$commit_str\n\nBREAKING CHANGE: $footer"
+  else 
+          commit_str="$commit_str\n\n$footer"
+  fi
+fi
+echo -e "${commit_str}"
+
+# printf <type>[optional scope]: <description>
+#
+# [optional body]
+#
+# [optional
