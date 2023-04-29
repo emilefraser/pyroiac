@@ -1,0 +1,18 @@
+    
+# Please use the following guidelines to format all your commit messages:
+# 
+#     <type>(<scope>): <subject>	<== HEADER *
+#     <BLANK LINE>
+#     <body>						<== BODY *
+#     <BLANK LINE>
+#     <footer>						<== FOOTER *
+# 
+# Please note that:
+#  - The HEADER is a single line of max. 50 characters       
+#       + <type> type of change made from the following list:
+#             chore, docs, feat, fix, refactor, style, test
+#       + <scope> can be anything specifying the place of the commit change
+#       + <subject> is a very short description of the change
+#  - The BODY should include reason for change and contrast previous behavior   
+#  - The FOOTER should contain any information about Breaking       
+#    Changes and/or reference issue/tickets relating to change
