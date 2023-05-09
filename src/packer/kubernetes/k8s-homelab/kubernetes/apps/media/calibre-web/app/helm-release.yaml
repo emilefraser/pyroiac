@@ -1,0 +1,81 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.zinn.ca/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: calibre-web
+  namespace: media
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 1.5.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s-charts
+        namespace: flux-system
+      interval: 15m
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    controller:
+      type: statefulset
+      annotations:
+        reloader.stakater.com/auto: "true"
+    image:
+      repository: ghcr.io/bjw-s/calibre-web
+      tag: 0.6.20@sha256:c52e66ee48b51747c87efa4ab529a2a3797981ee6808e884dc134e61c6de8dc5
+    env:
+      TZ: ${CONFIG_TIMEZONE}
+      CACHE_DIR: /cache
+    service:
+      main:
+        ports:
+          http:
+            port: 8083
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: nginx
+        annotations:
+          ingress.home.arpa/type: "internal"
+        hosts:
+          - host: books.${SECRET_DOMAIN_NAME}
+            paths:
+              - path: /
+    podSecurityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+    enableServiceLinks: false
+    volumeClaimTemplates:
+      - name: config
+        mountPath: /config
+        accessMode: ReadWriteOnce
+        size: 512Mi
+        storageClass: ceph-block
+    persistence:
+      media:
+        enabled: true
+        existingClaim: media-datastore
+      cache:
+        enabled: true
+        type: emptyDir
+        mountPath: /cache
+    resources:
+      requests:
+        cpu: 15m
+        memory: 249M
+      limits:
+        memory: 299M

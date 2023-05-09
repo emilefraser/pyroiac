@@ -1,0 +1,20 @@
+{
+	"boot_wait": "10s",
+	"cpus": "2" ,
+	"disk_size": "10240" ,
+	"memory": "2048" ,
+	"headless": "false" ,
+	"ssh_agent_auth": "false",
+	"ssh_clear_authorized_keys": "false",
+	"ssh_disable_agent_forwarding": "false",
+	"ssh_file_transfer_method": "scp",
+	"ssh_fullname": "Pyromaniac SSH",
+	"ssh_handshake_attempts": "20",
+	"ssh_keep_alive_interval": "30s",
+	"ssh_password": "packerpassword",
+	"ssh_port": "22",
+	"ssh_pty": "false",
+ 	"ssh_timeout": "10m",
+ 	"ssh_username": "packer",
+ 	"user_data_location": "./cloud-data/user-data" 
+}

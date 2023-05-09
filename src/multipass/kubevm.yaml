@@ -1,0 +1,15 @@
+#cloud-config
+
+users:
+    - name: pyromaniac
+      shell: /bin/bash
+      sudo: ALL=(ALL:ALL) NOPASSWD:ALL      
+      ssh_authorized_keys:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCpJL6rgCkAOmlUkvkswRxPqXpIyzsRXbB4XZEBz1JLZHKuocc55Adod8GlMG5uuCYABzvR3blXx4993DJs2EdWzQpW2XBlC47qBEG4edtqootKp8s+bkGIuP6SFUhAyIdL9krKWbLFb6uO6lkb4wp6NTUd0C+jMJZE6ELpsCGqCa/OulSh+gU5P6oPt5a+MQoayLFD40Tq+OZXDqnamHiOmaKs7MgD86BQ/OZrhApm0ICNoHB0jKu80yYyByHIx2FeR1p63dYYwVTqmFxgWjSV0uy3a0QJH7QXpW4033V+IOPl0GfI4ZhuUKdL1fOFKclOx0Os5B4nym74Myj0XOLUiNqbX/evnn5md7VUetJ/RIOVM6eAwATOxEUoscZsaHa7kv80HB6MDj7gnmjBoZi/3Hhv+cUmQ4NuNzyeKWHn68C73a2l2EhvhmK+N4ElsvW7L/B6ciyuU4XULIu1ZyXum/H8Vriu+alcMtv+57oZAlHH1j/BtTj9evc1Aqu1mms= pyromaniac@pyrohp
+
+chpasswd:
+  expire: false
+
+runcmd:
+  - curl --create-dirs -O --output-dir ~/apps -fsSL https://tailscale.com/install.sh | sh
+  - [ wget, "http://slashdot.org", -O, $HOME/index.html ]

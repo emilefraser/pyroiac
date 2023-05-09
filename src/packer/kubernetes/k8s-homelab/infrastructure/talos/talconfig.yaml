@@ -1,0 +1,166 @@
+---
+clusterName: ${CONFIG_CLUSTER_NAME}
+talosVersion: v1.4.1
+kubernetesVersion: v1.27.1
+endpoint: https://${CONFIG_CLUSTER_NAME}.zinn.tech:6443
+
+cniConfig:
+  name: none
+
+additionalApiServerCertSans:
+  - ${CONFIG_K8S_CLUSTER_ENDPOINT_IP}
+
+additionalMachineCertSans:
+  - ${CONFIG_K8S_CLUSTER_ENDPOINT_IP}
+  - ${CONFIG_CLUSTER_NAME}.zinn.tech
+
+domain: cluster.local
+
+clusterSvcNets:
+  - ${CONFIG_K8S_SERVICE_CIDR}
+clusterPodNets:
+  - ${CONFIG_K8S_POD_CIDR}
+
+nodes:
+  - hostname: k8s-1.zinn.tech
+    ipAddress: 10.11.0.16
+    disableSearchDomain: true
+    controlPlane: true
+    installDisk: /dev/sda
+    networkInterfaces:
+      - interface: eth0
+        mtu: 1500
+        dhcp: true
+  - hostname: k8s-2.zinn.tech
+    ipAddress: 10.11.0.17
+    disableSearchDomain: true
+    controlPlane: true
+    installDisk: /dev/sda
+    networkInterfaces:
+      - interface: eth0
+        mtu: 1500
+        dhcp: true
+  - hostname: k8s-3.zinn.tech
+    ipAddress: 10.11.0.18
+    disableSearchDomain: true
+    controlPlane: true
+    installDisk: /dev/sda
+    networkInterfaces:
+      - interface: eth0
+        mtu: 1500
+        dhcp: true
+  - hostname: k8s-4.zinn.tech
+    ipAddress: 10.11.0.19
+    disableSearchDomain: true
+    controlPlane: false
+    installDisk: /dev/sda
+    networkInterfaces:
+      - interface: eth0
+        mtu: 1500
+        dhcp: true
+  - hostname: k8s-5.zinn.tech
+    ipAddress: 10.11.0.20
+    disableSearchDomain: true
+    controlPlane: false
+    installDisk: /dev/sda
+    networkInterfaces:
+      - interface: eth0
+        mtu: 1500
+        dhcp: true
+  - hostname: k8s-6.zinn.tech
+    ipAddress: 10.11.0.21
+    disableSearchDomain: true
+    controlPlane: false
+    installDisk: /dev/sda
+    networkInterfaces:
+      - interface: eth0
+        mtu: 1500
+        dhcp: true
+controlPlane:
+  patches:
+    - |-
+      cluster:
+        apiServer:
+        controllerManager:
+          extraArgs:
+            bind-address: 0.0.0.0
+        discovery:
+          registries:
+            service:
+              disabled: true
+        proxy:
+          disabled: true
+        scheduler:
+          extraArgs:
+            bind-address: 0.0.0.0
+      machine:
+        files:
+          - content: |
+              [plugins]
+                [plugins."io.containerd.grpc.v1.cri"]
+                  enable_unprivileged_ports = true
+                  enable_unprivileged_icmp = true
+            path: /etc/cri/conf.d/20-customization.part
+            op: create
+        kubelet:
+          extraArgs:
+            feature-gates: GracefulNodeShutdown=true
+            rotate-server-certificates: "true"
+        install:
+          extraKernelArgs:
+            - talos.logging.kernel=udp://${CONFIG_SVC_VECTOR_AGGREGATOR_ADDR}:6001/
+        logging:
+          destinations:
+            - endpoint: udp://${CONFIG_SVC_VECTOR_AGGREGATOR_ADDR}:6002/
+              format: json_lines
+        network:
+          extraHostEntries:
+            - ip: ${CONFIG_K8S_CLUSTER_ENDPOINT_IP}
+              aliases:
+                - ${CONFIG_CLUSTER_NAME}.zinn.tech
+        sysctls:
+          fs.inotify.max_user_watches: "1048576"
+          fs.inotify.max_user_instances: "8192"
+        time:
+          disabled: false
+          servers:
+            - 10.11.0.1
+
+    - |-
+      - op: remove
+        path: /cluster/apiServer/admissionControl
+worker:
+  patches:
+    - |-
+      machine:
+        files:
+          - content: |
+              [plugins]
+                [plugins."io.containerd.grpc.v1.cri"]
+                  enable_unprivileged_ports = true
+                  enable_unprivileged_icmp = true
+            path: /etc/cri/conf.d/20-customization.part
+            op: create
+        kubelet:
+          extraArgs:
+            feature-gates: GracefulNodeShutdown=true
+            rotate-server-certificates: "true"
+        install:
+          extraKernelArgs:
+            - talos.logging.kernel=udp://${CONFIG_SVC_VECTOR_AGGREGATOR_ADDR}:6001/
+        logging:
+          destinations:
+            - endpoint: udp://${CONFIG_SVC_VECTOR_AGGREGATOR_ADDR}:6002/
+              format: json_lines
+        network:
+          extraHostEntries:
+            - ip: ${CONFIG_K8S_CLUSTER_ENDPOINT_IP}
+              aliases:
+                - ${CONFIG_CLUSTER_NAME}.zinn.tech
+        sysctls:
+          fs.inotify.max_user_watches: "1048576"
+          fs.inotify.max_user_instances: "8192"
+        time:
+          disabled: false
+          servers:
+            - 10.11.0.1

@@ -1,0 +1,35 @@
+#cloud-config
+package_update: false
+package_upgrade: true
+autoinstall:
+  version: 1
+  early-commands:
+    - systemctl stop ssh
+  locale: "en_US.UTF-8"
+  refresh-installer:
+    update: false
+  keyboard:
+    layout: "us"
+  storage:
+    layout:
+      name: "direct"  
+  identity:
+    hostname: "${hostname}"
+    # openssl passwd -6 <password>
+    password: "${user_password_hash}"
+    username: "${user_username}"
+  ssh:
+    install-server: yes
+    allow-pw: true
+    authorized-keys: ["${ssh_key}"]
+  debconf_selections: 
+    d-i base-installer/kernel/override-image string linux-image-virtual-hwe-22.04-edge
+  packages:
+    - efibootmgr
+#    - linux-image-virtual-hwe-22.04-edge
+  user-data:
+    disable_root: false
+  late-commands:
+    - 'sed -i "s/dhcp4: true/&\n      dhcp-identifier: mac/" /target/etc/netplan/00-installer-config.yaml'
+    - echo '%sudo ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/sudo
+    - /target/usr/bin/efibootmgr -o 0006,0005,0004,0003,0002,0001,0000 || true

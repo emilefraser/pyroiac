@@ -1,0 +1,115 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.zinn.ca/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cilium
+  namespace: kube-system
+  annotations:
+    meta.helm.sh/release-name: cilium
+    meta.helm.sh/release-namespace: kube-system
+  labels:
+    app.kubernetes.io/managed-by: Helm
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: cilium
+      version: 1.13.2
+      sourceRef:
+        kind: HelmRepository
+        name: cilium-charts
+        namespace: flux-system
+      interval: 15m
+  maxHistory: 3
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  uninstall:
+    keepHistory: false
+  values:
+    cluster:
+      name: "${CONFIG_CLUSTER_NAME}"
+      id: "1"
+
+    autoDirectNodeRoutes: true
+    bgp:
+      announce:
+        loadbalancerIP: true
+      enabled: true
+
+    securityContext:
+      privileged: true
+      capabilities:
+        ciliumAgent: "{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}"
+        cleanCiliumState: "{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}"
+    cgroup:
+      autoMount:
+        enabled: false
+      hostRoot: "/sys/fs/cgroup"
+
+    containerRuntime:
+      integration: containerd
+
+    endpointRoutes:
+      enabled: true
+
+    ipam:
+      mode: "kubernetes"
+
+    kubeProxyReplacement: "strict"
+    kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
+    k8sServiceHost: "${CONFIG_CLUSTER_NAME}.${SECRET_TECH_DOMAIN_NAME}"
+    k8sServicePort: 6443
+    ipv4NativeRoutingCIDR: "${CONFIG_K8S_POD_CIDR}"
+
+    loadBalancer:
+      algorithm: maglev
+      mode: dsr
+    localRedirectPolicy: true
+    operator:
+      rollOutPods: true
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    rollOutCiliumPods: true
+    tunnel: disabled
+
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+
+    hubble:
+      enabled: true
+      metrics:
+        serviceMonitor:
+          enabled: true
+        enabled:
+          - dns:query;ignoreAAAA
+          - drop
+          - tcp
+          - flow
+          - port-distribution
+          - icmp
+          - http
+      relay:
+        enabled: true
+        rollOutPods: true
+      ui:
+        enabled: true
+        rollOutPods: true
+        ingress:
+          enabled: true
+          annotations:
+            kubernetes.io/ingress.class: "nginx"
+            ingress.home.arpa/type: "internal"
+            nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+          hosts:
+            - "hubble.${SECRET_DOMAIN_NAME}"

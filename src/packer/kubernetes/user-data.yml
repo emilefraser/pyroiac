@@ -1,0 +1,111 @@
+#cloud-config
+# This needs to be the "user-data" (no extension) file on vfat partition of the official ubuntu
+# raspberry pi image.
+
+# This is the user-data configuration file for cloud-init. By default this sets
+# up an initial user called "ubuntu" with password "ubuntu", which must be
+# changed at first login. However, many additional actions can be initiated on
+# first boot from this file. The cloud-init documentation has more details:
+#
+# https://cloudinit.readthedocs.io/
+#
+# Some additional examples are provided in comments below the default
+# configuration.
+
+# Enable password authentication with the SSH daemon
+ssh_pwauth: false
+
+users:
+  - name: dylan
+    gecos: Dylan Hardison
+    primary_group: dylan
+    groups: users,sudo
+    ssh_import_id: "gh:dylanwh"
+    lock_passwd: false
+    sudo: ALL=(ALL:ALL) NOPASSWD:ALL
+    shell: /usr/bin/fish
+    passwd: PASSWORD_HASH
+
+## Update apt database and upgrade packages on first boot
+package_update: true
+package_upgrade: true
+
+## Install additional packages on first boot
+packages:
+  - build-essential
+  - emacs-nox
+  - fish
+  - golang-go
+  - hub
+  - moreutils
+  - mosh
+  - nq
+  - python-websocket
+  - rclone
+  - silversearcher-ag
+  - tmux
+  - tree
+  - vim-nox
+  - weechat
+  - weechat-lua
+
+#write_files:
+#- path: /etc/default/keyboard
+#  content: |
+#    # KEYBOARD configuration file
+#    # Consult the keyboard(5) manual page.
+#    XKBMODEL="pc105"
+#    XKBLAYOUT="gb"
+#    XKBVARIANT=""
+#    XKBOPTIONS="ctrl: nocaps"
+#  permissions: '0644'
+#  owner: root:root
+#- encoding: gzip
+#  path: /usr/bin/hello
+#  content: !!binary |
+#    H4sIAIDb/U8C/1NW1E/KzNMvzuBKTc7IV8hIzcnJVyjPL8pJ4QIA6N+MVxsAAAA=
+#  owner: root:root
+#  permissions: '0755'
+
+write_files:
+- path: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+  content: "network: {config: disabled}\n"
+  owner: "root:root"
+  permissions: "0640"
+- path: /etc/netplan/my-network.yaml
+  content: |
+    network:
+      version: 2
+      ethernets:
+        eth0:
+          optional: true
+          dhcp4: true
+      wifis:
+        wlan0:
+          optional: true
+          dhcp4: true
+          access-points:
+            "ESSID":
+              password: "NETWORK_PASSWORD"
+  owner: "root:root"
+  permissions: "0640"
+
+## Run arbitrary commands at rc.local like time
+hostname: HOSTNAME
+runcmd:
+  - [
+      sh,
+      -xc,
+      "curl https://pkgs.tailscale.com/stable/ubuntu/focal.gpg | sudo apt-key add -",
+    ]
+  - [
+      sh,
+      -xc,
+      "curl https://pkgs.tailscale.com/stable/ubuntu/focal.list | sudo tee /etc/apt/sources.list.d/tailscale.list",
+    ]
+  - [apt-get, update]
+  - [apt-get, install, -y, tailscale]
+  - [tailscale, up, -authkey, TAILSCALE_AUTH_KEY ]
+  - [rm, /boot/firmware/user-data]
+  - [touch, /etc/cloud/cloud-init.disabled]
+  - [reboot]

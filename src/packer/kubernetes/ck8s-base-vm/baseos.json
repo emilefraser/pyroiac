@@ -1,0 +1,93 @@
+{
+  "builders": [
+    {
+      "accelerator": "kvm",
+      "disk_compression": true,
+      "disk_discard": "unmap",
+      "disk_image": true,
+      "disk_interface": "virtio-scsi",
+      "disk_size": "{{ user `disk_size`}}",
+      "format": "qcow2",
+      "headless": true,
+      "http_directory": "cloud-init/baseos",
+      "http_port_max": 9100,
+      "http_port_min": 9000,
+      "iso_checksum": "sha256:{{ user `source_iso_checksum` }}",
+      "iso_url": "{{ user `source_iso_url` }}",
+      "name": "baseos",
+      "qemuargs": [
+        [
+          "-m",
+          "2048M"
+        ],
+        [
+          "-smp",
+          "2"
+        ],
+        [
+          "-smbios",
+          "type=1,serial=ds=nocloud-net;instance-id=packer;seedfrom=http://{{ .HTTPIP }}:{{ .HTTPPort }}/"
+        ]
+      ],
+      "shutdown_command": "echo 'shutdown -P now' > /tmp/shutdown.sh; sudo -S sh '/tmp/shutdown.sh'",
+      "skip_compaction": false,
+      "ssh_port": 22,
+      "ssh_private_key_file": ".ssh/id_rsa",
+      "ssh_timeout": "10000s",
+      "ssh_username": "{{ user `ssh_username` }}",
+      "type": "qemu",
+      "vm_name": "{{ user `output_vm_name` }}",
+      "vnc_bind_address": "0.0.0.0",
+      "vnc_port_max": 5900,
+      "vnc_port_min": 5900
+    }
+  ],
+  "description": "CK8S VM based on Ubuntu 18.04 LTS",
+  "post-processors": [
+    {
+      "checksum_types": [
+        "sha256",
+        "md5"
+      ],
+      "output": "./output-baseos/baseos_{{.ChecksumType}}.checksum",
+      "type": "checksum"
+    }
+  ],
+  "provisioners": [
+    {
+      "environment_vars": [
+        "DEBIAN_FRONTEND=noninteractive"
+      ],
+      "execute_command": "sudo -S bash -c '{{ .Vars }} {{ .Path }}'",
+      "expect_disconnect": true,
+      "script": "./scripts/base-setup.sh",
+      "type": "shell"
+    },
+    {
+       "ansible_env_vars": [
+          "ANSIBLE_SSH_ARGS='-o PubkeyAcceptedKeyTypes=+ssh-rsa -o HostkeyAlgorithms=+ssh-rsa'"
+      ],
+      "type": "ansible",
+      "playbook_file": "./ansible/provision.yaml",
+      "extra_arguments": ["-e", "@./variables.json"]
+    },
+    {
+      "environment_vars": [
+        "DEBIAN_FRONTEND=noninteractive"
+      ],
+      "execute_command": "sudo -S bash -c '{{ .Vars }} {{ .Path }}'",
+      "script": "./scripts/pre-pull-k8s-images.sh",
+      "type": "shell"
+    },
+    {
+      "environment_vars": [
+        "DEBIAN_FRONTEND=noninteractive"
+      ],
+      "execute_command": "sudo -S bash -c '{{ .Vars }} {{ .Path }}'",
+      "expect_disconnect": true,
+      "script": "./scripts/clean-up.sh",
+      "type": "shell"
+    }
+  ]
+}
+

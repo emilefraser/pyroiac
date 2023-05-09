@@ -1,0 +1,132 @@
+#cloud-config
+chpasswd:
+    list: |
+      ubuntu:VMware1!
+    expire: false
+groups:
+  - docker
+users:
+  - default
+  - name: ubuntu
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDcxQcNS5vzxHn2sdHHw/nTHWiME5OWv1i3cvMdqMUWKhPSv7uHCTz3Q4kot8UvdD/jIDOktIpDlayVeXkxAuMzIB0lbVEku1mjLyDQ0syGVSAvj4BkH2uLp0Hybc97U0PQHYgLy60d2l8c96qajPHxRmDYRKbCQaNxQeafxwlQUzr615RvzjOgt5v7zhdZ+V5pIDH2Amf/rRiPrq0NLTYShpoRwtFeS4bQtG5mHfDDvzg+Jh1Sxt63oB0AGy0ORv7GzSDlqraFADxOwFnKz0/fbVKeauFCFXRKrral+PSRgbr39cVJHykaYVDw9D3nKMZqDKITRXAJiWAEES91yk6nikAwgyXup+wpiymMmgUq60ASHgpTqWbtPdEZAsjtlhJXSDit+iWS1yrdLg5ayza8PAr5YijT0g+xMkJXudxgGOr913Oty04Fxk61n3kcjadsbt5hjc3QWxK0Rj0jJK9HwV2sn8lHVdvSfwOkgZLH7WH4E2IBGQVm+4Cd8RLMsAev5tnWGIiSLl2uRi63+mKwynIriSAAdWurrs11Q36qYrdwPK2XXq/MvUcTnm3yXSLjeSLWMmdoyqiLqxerOiBcMRbTwvVwfe73UJXdLPbfA0xqAB/gTg2NxmcAI/F3OEWMRM4/PsqPS2t/VAL993OdSshHGtT30AP86G+vuHuecw== mylesg@vmware.com
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDV3NF8CiLye4jU6ioQ/2JuWLYAX4l7c4C/rinvKafwGRBh+6jB/sAiLL/3yfC6ZtCWYaxlFXa/5w4jPj3NYeb1BmwY+FplIbZniMrk58hDraf+bk38p31RwyBp4ZY8vIpR8DaT2jwVIFPMS1/8w5CplwjIO19SuKhs45g+JoPnzTR6uFCrAwHnMqXXEGv2/iufDoxjD8KhPh03wgqTkjNP6RoSnfEKVq6oWGvC602BM4Jk9BD2OwvHKzPFD22deKywGQpxvuvnWqi+jhKN8gPS2ORNYH2bfD+imzDlvS8OmKtz+V+6LMLQ67v+73SDzMCMaSBJ626GNtfohkXiAiP7 jenkins@satm.eng.vmware.com
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo, docker
+    shell: /bin/bash
+apt:
+  sources:
+    kubernetes:
+      source: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+      keyserver: "hkp://keyserver.ubuntu.com:80"
+      keyid: BA07F4FB
+    docker:
+      arches: amd64
+      source: "deb https://download.docker.com/linux/ubuntu bionic stable"
+      keyserver: "hkp://keyserver.ubuntu.com:80"
+      keyid: 0EBFCD88
+package_upgrade: true
+packages:
+  - [kubelet, 1.14.3-00]
+  - [kubectl, 1.14.3-00]
+  - [kubeadm, 1.14.3-00]
+  - [docker-ce, '5:18.09.6~3-0~ubuntu-bionic']
+write_files:
+  - content: |
+        {
+          "exec-opts": ["native.cgroupdriver=systemd"],
+          "log-driver": "json-file",
+          "log-opts": {
+            "max-size": "100m"
+          },
+          "storage-driver": "overlay2"
+        }
+    path: /etc/docker/daemon.json
+  - content: |
+        apiVersion: kubeadm.k8s.io/v1beta1
+        kind: InitConfiguration
+        bootstrapTokens:
+              - groups:
+                - system:bootstrappers:kubeadm:default-node-token
+                token: y7yaev.9dvwxx6ny4ef8vlq
+                ttl: 0s
+                usages:
+                - signing
+                - authentication
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "vsphere"
+            cloud-config: "/etc/kubernetes/vsphere.conf"
+        ---
+        apiVersion: kubeadm.k8s.io/v1beta1
+        kind: ClusterConfiguration
+        kubernetesVersion: v1.14.3
+        apiServer:
+          extraArgs:
+            cloud-provider: "vsphere"
+            cloud-config: "/etc/kubernetes/vsphere.conf"
+          extraVolumes:
+          - name: cloud
+            hostPath: "/etc/kubernetes/vsphere.conf"
+            mountPath: "/etc/kubernetes/vsphere.conf"
+        controllerManager:
+          extraArgs:
+            cloud-provider: "vsphere"
+            cloud-config: "/etc/kubernetes/vsphere.conf"
+          extraVolumes:
+          - name: cloud
+            hostPath: "/etc/kubernetes/vsphere.conf"
+            mountPath: "/etc/kubernetes/vsphere.conf"
+        networking:
+          podSubnet: "10.244.0.0/16"
+    path: /etc/kubernetes/kubeadminitmaster.yaml
+  - content: |
+        apiVersion: kubeadm.k8s.io/v1beta1
+        discovery:
+          file:
+            kubeConfigPath: discovery.yaml
+          timeout: 5m0s
+          tlsBootstrapToken: y7yaev.9dvwxx6ny4ef8vlq
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: vsphere
+    path: /etc/kubernetes/kubeadminitworker.yaml
+  - content: |
+           [Global]
+            user = "administrator@vsphere.local"
+            password = "Admin!23"
+            port = "443"
+            insecure-flag = "1"
+
+            [VirtualCenter "10.198.26.160"]
+            datacenters = "vSAN-DC"
+
+            [Workspace]
+            server = "10.198.26.160"
+            datacenter = "vSAN-DC"
+            default-datastore = "vsanDatastore"
+            resourcepool-path = "vSAN-Cluster/Resources"
+            folder = "k8s"
+
+            [Disk]
+            scsicontrollertype = pvscsi
+
+            [Network]
+            public-network = "VM Network"
+    path: /etc/kubernetes/vsphere.conf
+runcmd:
+  - swapoff --all
+  - sed -ri '/\sswap\s/s/^#?/#/' /etc/fstab
+  - mkdir -p /etc/systemd/system/docker.service.d
+  - systemctl daemon-reload
+  - systemctl restart docker
+  - sysctl net.bridge.bridge-nf-call-iptables=1
+  - sysctl net.bridge.bridge-nf-call-ip6tables=1
+  - 'echo "disable_vmware_customization: false" >> /etc/cloud/cloud.cfg'
+  - sed -i 's/D \/tmp 1777 root root -/#D \/tmp 1777 root root -/g' /usr/lib/tmpfiles.d/tmp.conf
+  - echo -n > /etc/machine-id
+final_message: "The system is prepped, after $UPTIME seconds"
+power_state:
+  timeout: 30
+  mode: poweroff

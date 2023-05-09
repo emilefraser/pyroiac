@@ -1,0 +1,7 @@
+k3sup
+bin/**
+kubeconfig
+.DS_Store
+.idea/
+mc
+/install.sh

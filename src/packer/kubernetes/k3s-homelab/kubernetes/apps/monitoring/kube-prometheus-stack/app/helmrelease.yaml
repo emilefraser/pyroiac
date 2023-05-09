@@ -1,0 +1,163 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: monitoring
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: 45.25.0
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+  install:
+    createNamespace: true
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  values:
+    alertmanager:
+      config:
+        global:
+          resolve_timeout: 5m
+        receivers:
+          - name: "null"
+          - name: discord
+            webhook_configs:
+              - url: http://alertmanager-discord:9094
+        route:
+          group_by:
+            - namespace
+          group_interval: 5m
+          group_wait: 30s
+          receiver: discord
+          repeat_interval: 12h
+          routes:
+            - receiver: "null"
+              matchers:
+                - alertname = Watchdog
+            - receiver: discord
+              matchers:
+                - severity =~ "warning|critical|info"
+      ingress:
+        enabled: true
+        pathType: Prefix
+        ingressClassName: "nginx"
+        hosts:
+          - &host "alert-manager.${SECRET_DOMAIN}"
+        tls:
+          - hosts:
+              - *host
+            secretName: "alert-manager-tls"
+      alertmanagerSpec:
+        replicas: 1
+        podAntiAffinity: hard
+        storage:
+          volumeClaimTemplate:
+            spec:
+              resources:
+                requests:
+                  storage: 1Gi
+    kube-state-metrics:
+      metricLabelsAllowlist:
+        - "persistentvolumeclaims=[*]"
+      prometheus:
+        monitor:
+          enabled: true
+          relabelings:
+            - action: replace
+              regex: (.*)
+              replacement: $1
+              sourceLabels:
+                - __meta_kubernetes_pod_node_name
+              targetLabel: kubernetes_node
+    grafana:
+      enabled: false
+      forceDeployDashboards: true
+      sidecar:
+        dashboards:
+          multicluster:
+            etcd:
+              enabled: true
+    kubelet:
+      enabled: true
+      serviceMonitor:
+        metricRelabelings:
+          - action: replace
+            sourceLabels:
+              - node
+            targetLabel: instance
+    kubeApiServer:
+      enabled: true
+    kubeControllerManager:
+      enabled: true
+      endpoints:
+        - 192.168.1.70
+        - 192.168.1.71
+        - 192.168.1.72
+    kubeScheduler:
+      enabled: true
+      endpoints:
+        - 192.168.1.70
+        - 192.168.1.71
+        - 192.168.1.72
+    kubeProxy:
+      enabled: true
+      endpoints:
+        - 192.168.1.70
+        - 192.168.1.71
+        - 192.168.1.72
+    kubeEtcd:
+      enabled: true
+      endpoints:
+        - 192.168.1.70
+        - 192.168.1.71
+        - 192.168.1.72
+      service:
+        enabled: true
+        port: 2381
+        targetPort: 2381
+    prometheus:
+      ingress:
+        enabled: true
+        ingressClassName: nginx
+        annotations:
+          hajimari.io/appName: "Prometheus"
+          hajimari.io/icon: simple-icons:prometheus
+        pathType: Prefix
+        hosts:
+          - &host prometheus.${SECRET_DOMAIN}
+        tls:
+          - hosts:
+              - *host
+      prometheusSpec:
+        replicas: 1
+        replicaExternalLabelName: __replica__
+        ruleSelectorNilUsesHelmValues: false
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        probeSelectorNilUsesHelmValues: false
+        retention: 7d
+        retentionSize: 10GB
+        enableAdminAPI: true
+        walCompression: true
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              resources:
+                requests:
+                  storage: 15Gi
+  valuesFrom:
+    - kind: Secret
+      name: discord-webhook
+      valuesKey: ALERT_MANAGER_DISCORD_WEBHOOK
+      targetPath: alertmanager.config.global.slack_api_url
+      optional: false

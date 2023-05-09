@@ -1,0 +1,168 @@
+{
+  "variables": {
+
+    "vm_name": "packer-ubuntu-1604-amd64",
+    "hostname": "localhost",
+    "domain": "",
+
+    "vmware_guest_os_type": "ubuntu64Guest",
+    "vmware_tools_type": "distro",
+
+    "cpus": "4",
+    "disk_size": "20480",
+    "disk_controller": "pvscsi",
+    "disk_thin": "true",
+    "memory": "1024",
+    "memory_reserve_all": "false",
+    "network_card": "vmxnet3",
+
+    "preseed": "preseed.cfg",
+    "boot_command_prefix": "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+
+    "iso_checksum": "7d8e0055d663bffa27c1718685085626cb59346e7626ba3d3f476322271f573e",
+    "iso_name": "ubuntu-18.04.3-server-amd64.iso",
+    "iso_url": "http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.3-server-amd64.iso",
+
+    "ssh_username": "root",
+    "ssh_password": "toor",
+
+    "vsphere-vcenter-server": "{{env `PACKER_VSPHERE_VCENTER_SERVER`}}",
+    "vsphere-esxi-host": "{{env `PACKER_VSPHERE_ESXI_HOST`}}",
+    "vsphere-username": "{{env `PACKER_VSPHERE_USERNAME`}}",
+    "vsphere-password": "{{env `PACKER_VSPHERE_PASSWORD`}}",
+    "vsphere-datacenter": "{{env `PACKER_VSPHERE_DATACENTER`}}",
+    "vsphere-resource-pool": "{{env `PACKER_VSPHERE_RESOURCE_POOL`}}",
+    "vsphere-datastore": "{{env `PACKER_VSPHERE_DATASTORE`}}",
+    "vsphere-datastore-iso": "{{env `PACKER_VSPHERE_DATASTORE_ISO`}}",
+    "vsphere-network": "{{env `PACKER_VSPHERE_NETWORK`}}",
+    "vsphere-vm-version": "{{env `PACKER_VSPHERE_VM_VERSION`}}",
+    "vsphere-insecure-connection": "true",
+    "vsphere-convert-to-template": "true",
+
+    "ansible_cleanup": "true",
+    "ansible_update_os": "true",
+    "ansible_install_packages": "",
+    "ansible_unique_host_ssh_key": "true",
+    "ansible_configure_vagrant": "false",
+    "ansible_install_guest_tools": "true",
+    "ansible_remove_build_tools": "true",
+    "ansible_vmware_vm_tools": "dist",
+    "ansible_install_nfs": "false",
+
+    "whiteout": "false"
+
+  },
+  "sensitive-variables": ["vmware-password", "ssh_password"],
+  "builders": [
+    {
+      "type": "vsphere-iso",
+
+      "vcenter_server":       "{{user `vsphere-vcenter-server`}}",
+      "host":                 "{{user `vsphere-esxi-host`}}",
+      "username":             "{{user `vsphere-username`}}",
+      "password":             "{{user `vsphere-password`}}",
+      "insecure_connection":  "{{user `vsphere-insecure-connection`}}",
+
+      "datacenter":           "{{user `vsphere-datacenter`}}",
+      "resource_pool":        "{{user `vsphere-resource-pool`}}",
+      "datastore":            "{{user `vsphere-datastore`}}",
+
+      "convert_to_template":  "{{user `vsphere-convert-to-template`}}",
+      "vm_version":           "{{user `vsphere-vm-version`}}",
+
+      "guest_os_type":        "{{user `vmware_guest_os_type`}}",
+
+      "CPUs":                 "{{user `cpus`}}",
+      "RAM":                  "{{user `memory`}}",
+      "RAM_reserve_all":      "{{user `memory_reserve_all`}}",
+
+      "storage": [
+        {
+          "disk_size": "{{user `disk_size`}}",
+          "disk_thin_provisioned": "{{user `disk_thin`}}"
+        }
+      ],
+
+      "network_adapters": [
+        {
+          "network": "{{user `vsphere-network`}}",
+          "network_card": "{{user `network_card`}}"
+        }
+      ],
+
+      "disk_controller_type":  "{{user `disk_controller`}}",
+
+      "vm_name": "{{ user `vm_name`}}",
+
+      "http_directory": "http",
+
+      "ssh_username": "{{user `ssh_username`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+
+      "boot_command": [
+        "{{ user `boot_command_prefix` }}",
+        "/install/vmlinuz noapic<wait>",
+        " debian-installer=en_US auto locale=en_US kbd-chooser/method=us<wait>",
+        " fb=false debconf/frontend=noninteractive<wait>",
+        " keyboard-configuration/modelcode=SKIP<wait>",
+        " keyboard-configuration/layout=USA<wait>",
+        " keyboard-configuration/variant=USA console-setup/ask_detect=false<wait>",
+        " netcfg/get_hostname={{ user `hostname` }}<wait>",
+        " passwd/root-login=true passwd/make-user=false<wait>",
+        " passwd/root-password={{user `ssh_password`}}<wait>",
+        " passwd/root-password-again={{user `ssh_password`}}<wait>",
+        " passwd/username={{ user `ssh_username` }}<wait>",
+        " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{ user `preseed` }}<wait>",
+        " initrd=/install/initrd.gz -- <enter><wait>"
+      ],
+      "shutdown_command": "shutdown -h now",
+
+      "iso_checksum": "{{user `iso_checksum`}}",
+
+      "iso_paths": [
+        "[{{user `vsphere-datastore-iso`}}] ISO/{{user `iso_name`}}"
+      ]
+    }
+
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "{{.Vars}} bash '{{.Path}}'",
+      "script": "scripts/ansible.sh"
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "ansible/main.yml",
+      "galaxy_file": "requirements.yml",
+      "extra_arguments": [
+            "--extra-vars \"",
+            "packer_update_os={{user `ansible_update_os` }} ",
+            "packer_install_packages={{user `ansible_install_packages` }} ",
+            "packer_unique_host_ssh_key={{user `ansible_unique_host_ssh_key` }} ",
+            "packer_configure_vagrant={{user `ansible_configure_vagrant` }} ",
+            "packer_install_guest_tools={{user `ansible_install_guest_tools` }} ",
+            "packer_remove_build_tools={{user `ansible_remove_build_tools` }} ",
+            "packer_vmware_vm_tools={{user `ansible_vmware_vm_tools` }} ",
+            "packer_install_nfs={{user `ansible_install_nfs` }} ",
+            "\""
+          ],
+      "clean_staging_directory": "true"
+    },
+    {
+      "type": "shell",
+      "expect_disconnect": "true",
+
+      "environment_vars": [
+        "ANSIBLE_CLEANUP={{user `ansible_cleanup`}}",
+        "WHITEOUT={{user `whiteout`}}"
+      ],
+
+      "execute_command": "{{.Vars}} bash '{{.Path}}'",
+      "scripts": [
+        "scripts/cleanup.sh"
+      ]
+    }
+  ]
+
+}

@@ -1,0 +1,10 @@
+
+TODO:
+
+"for i in group gshadow passwd shadow subuid subgid; do mv /etc/$i- /etc/$i; done",
+    replace with the recommendation from https://discourse.ubuntu.com/t/building-multipass-images-with-packer/12361/8
+
+update systemd files from the official documentation:
+    https://nomadproject.io/docs/install/production/deployment-guide/
+    https://learn.hashicorp.com/consul/datacenter-deploy/deployment-guide
+

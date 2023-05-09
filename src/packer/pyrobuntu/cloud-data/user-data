@@ -1,0 +1,29 @@
+#cloud-config
+
+# Ubuntu Server 22.04 LTS
+autoinstall:
+  version: 1
+  locale: en_US
+  keyboard:
+    layout: us
+  user-data:
+    disable_root: false
+  identity:
+    hostname: packer
+    username: packer
+    realname: packer
+    password: $6$rounds=15000$kzRuoYUc97N8A4bK$SeBtYNRLeIV/asRqhNx6KmfFnFyn16OuqzD.sttVLn8y4rLMtIXFSAPbsDJazzlInliJhtiS6LMT5pT408MOr/   
+  early-commands:
+    - sudo systemctl stop ssh
+  users:
+    - name: packer
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      groups: users, admin, sudo
+      passwd: $6$rounds=4096$XxQGokSw4FI8unZF$lAnQ0ZSMuCvSlv.rFjcxOpyAZr/ZDwtaI/X6BSSH0wtKngvprmgr9nvSMV/dBzE.TJ7Tvd8y0.T50dW5Bi1vf/
+      lock_passwd: false
+      shell: /bin/bash
+  ssh:
+    install-server: true
+    allow-pw: yes
+    authorized-keys: [ "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCpJL6rgCkAOmlUkvkswRxPqXpIyzsRXbB4XZEBz1JLZHKuocc55Adod8GlMG5uuCYABzvR3blXx4993DJs2EdWzQpW2XBlC47qBEG4edtqootKp8s+bkGIuP6SFUhAyIdL9krKWbLFb6uO6lkb4wp6NTUd0C+jMJZE6ELpsCGqCa/OulSh+gU5P6oPt5a+MQoayLFD40Tq+OZXDqnamHiOmaKs7MgD86BQ/OZrhApm0ICNoHB0jKu80yYyByHIx2FeR1p63dYYwVTqmFxgWjSV0uy3a0QJH7QXpW4033V+IOPl0GfI4ZhuUKdL1fOFKclOx0Os5B4nym74Myj0XOLUiNqbX/evnn5md7VUetJ/RIOVM6eAwATOxEUoscZsaHa7kv80HB6MDj7gnmjBoZi/3Hhv+cUmQ4NuNzyeKWHn68C73a2l2EhvhmK+N4ElsvW7L/B6ciyuU4XULIu1ZyXum/H8Vriu+alcMtv+57oZAlHH1j/BtTj9evc1Aqu1mms= pyromaniac@pyrohp" ]
+

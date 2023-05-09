@@ -1,0 +1,59 @@
+#cloud-config
+
+# This is the user-data configuration file for cloud-init. By default this sets
+# up an initial user called "ubuntu" with password "ubuntu", which must be
+# changed at first login. However, many additional actions can be initiated on
+# first boot from this file. The cloud-init documentation has more details:
+#
+# https://cloudinit.readthedocs.io/
+#
+# Some additional examples are provided in comments below the default
+# configuration.
+
+# Enable password authentication with the SSH daemon
+ssh_pwauth: true
+
+## On first boot, use ssh-import-id to give the specific users SSH access to
+## the default user
+ssh_import_id:
+#- lp:my_launchpad_username
+- gh:darkflib
+
+## Add users and groups to the system, and import keys with the ssh-import-id
+## utility
+groups:
+- mike: [mike]
+
+users:
+- name: mike
+  gecos: Mike
+  primary_group: mike
+  groups: ['users','sudo']
+  ssh_import_id: gh:darkflib
+  lock_passwd: false
+  passwd: $6$SALTEDPEANUTS$qelhflwdhfkjgasdkgasdgkjqgdjgdhgsdjfhgsjhfgRANDOM.ksfhgksdhfkshdfkhsdkfhskhdf
+  sudo: ['ALL=(ALL) NOPASSWD:ALL']
+
+## Update apt database and upgrade packages on first boot
+package_update: true
+package_upgrade: true
+
+## Install additional packages on first boot
+packages:
+- pwgen
+- curl
+- tmux
+- autossh
+- vim
+- aptitude
+- python3
+- fail2ban
+- jq
+
+
+## Run arbitrary commands at rc.local like time
+runcmd:
+ - [ curl, "https://f001.backblazeb2.com/file/wwff-files/xterm-kitty", --output, /lib/terminfo/x/xterm-kitty ]
+
+ 
+final_message: "W00T, We should be up and ready after $UPTIME seconds at $TIMESTAMP"

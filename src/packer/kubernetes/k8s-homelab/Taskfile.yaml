@@ -1,0 +1,23 @@
+---
+version: "3"
+
+vars:
+  PROJECT_DIR:
+    sh: "git rev-parse --show-toplevel"
+
+includes:
+  es: .taskfiles/ExternalSecrets/Tasks.yaml
+  fmt: .taskfiles/Format/Tasks.yaml
+  fx: .taskfiles/Flux/Tasks.yaml
+  kub: .taskfiles/Kubernetes/Tasks.yaml
+  pc: .taskfiles/PreCommit/Tasks.yaml
+  redis: .taskfiles/Redis/Tasks.yaml
+  rook: .taskfiles/Rook/Tasks.yaml
+  vs: .taskfiles/VolSync/Tasks.yaml
+
+tasks:
+  secrets:
+    desc: Encode config and secrets
+    cmds:
+      - |
+        infrastructure/setup/build-config.sh

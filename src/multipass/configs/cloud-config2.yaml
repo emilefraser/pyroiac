@@ -1,0 +1,88 @@
+ ## template: jinja
+#cloud-config
+
+{% if v1.distro_release == 'focal' %}
+
+users:
+    - name: berkant
+      shell: /usr/bin/bash
+      ssh_import_id: gh:berkant
+      sudo: ALL=(ALL:ALL) NOPASSWD:ALL
+
+chpasswd:
+    expire: false
+
+apt_upgrade: true
+apt:
+    sources:
+        caddy:
+            source: deb [trusted=yes] https://dl.cloudsmith.io/public/caddy/stable/deb/ubuntu focal main
+        neovim:
+            source: ppa:neovim-ppa/stable
+        hashicorp:
+            source: deb [trusted=yes] https://apt.releases.hashicorp.com focal main
+        speedtest:
+            source: deb [trusted=yes] https://packagecloud.io/ookla/speedtest-cli/ubuntu focal main
+        tailscale:
+            source: deb [trusted=yes] https://pkgs.tailscale.com/stable/ubuntu focal main
+
+packages:
+    - python-is-python3
+    - build-essential
+    - python3-pip
+    - p7zip-full
+    - traceroute
+    - mediainfo
+    - speedtest
+    - tailscale
+    - neofetch
+    - mlocate
+    - ffmpeg
+    - iperf3
+    - neovim
+    - screen
+    - vnstat
+    - aria2
+    - caddy
+    - iftop
+    - unzip
+    - whois
+    - curl
+    - file
+    - htop
+    - tree
+    - wget
+    - cbm
+    - git
+    - mtr
+    - jq
+
+runcmd:
+    - tailscale up -authkey='<% EDIT_THIS_FIELD_YourNodeAuthKey %>'
+
+    - ufw --force reset
+    - ufw allow in on tailscale0 to any
+    - ufw --force enable
+
+    - sed -i '1i PermitRootLogin no' /etc/ssh/sshd_config
+    - sed -i '1i PasswordAuthentication no' /etc/ssh/sshd_config
+    - sed -i '1i ClientAliveInterval 5' /etc/ssh/sshd_config
+    - systemctl --no-block restart sshd
+
+    - pip3 install youtube-dl httpie nyx
+
+    - wget -O /tmp/rclone.deb https://github.com/rclone/rclone/releases/download/v1.55.1/rclone-v1.55.1-linux-amd64.deb
+    - dpkg -i /tmp/rclone.deb
+
+    - wget -O /tmp/bat.deb https://github.com/sharkdp/bat/releases/download/v0.18.0/bat_0.18.0_amd64.deb
+    - dpkg -i /tmp/bat.deb
+
+    - mkdir -p /opt/nvm
+    - wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | NVM_DIR=/opt/nvm bash
+    - printf '\nexport NVM_DIR="/opt/nvm"\n[ -s "/home/pyromaniac/.nvm/nvm.sh" ] && . "/home/pyromaniac/.nvm/nvm.sh"\n' >> /etc/bash.bashrc
+
+    - wget -O /tmp/bento4.zip http://zebulon.bok.net/Bento4/binaries/Bento4-SDK-1-6-0-637.x86_64-unknown-linux.zip
+    - unzip /tmp/bento4.zip -d /opt
+    - printf '\nexport PATH="/home/pyromaniac/.rd/bin:/home/pyromaniac/.local/bin:/home/pyromaniac/.rd/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/snap/bin:/opt/Bento4-SDK-1-6-0-637.x86_64-unknown-linux/bin"\n' >> /etc/bash.bashrc
+
+{% endif %}

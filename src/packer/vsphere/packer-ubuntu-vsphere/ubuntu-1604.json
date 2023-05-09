@@ -1,0 +1,17 @@
+{
+  "_comment": "Build with `packer build -var-file=ubuntu-1604.json ubuntu-vagrant.json`",
+
+  "vm_name": "packer-ubuntu-1604-amd64",
+  "ubuntu_version": "1604",
+  "vmware_guest_os_type": "ubuntu64Guest",
+
+  "cpus": "4",
+  "disk_size": "20480",
+  "memory": "1024",
+
+  "preseed": "preseed.cfg",
+
+  "iso_checksum": "b23488689e16cad7a269eb2d3a3bf725d3457ee6b0868e00c8762d3816e25848",
+  "iso_name": "ubuntu-16.04.7-server-amd64.iso",
+  "iso_url": "https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso"
+}

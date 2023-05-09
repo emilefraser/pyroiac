@@ -1,0 +1,28 @@
+users:
+  - name: ubuntu
+    passwd: $6$xyz$74AlwKA3Z5n2L6ujMzm/zQXHCluA4SRc2mBfO2/O5uUc2yM2n2tnbBMi/IVRLJuKwfjrLZjAT7agVfiK7arSy/
+    groups: [adm, cdrom, dip, plugdev, lxd, sudo]
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock-passwd: false
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqT4fUUdygVzk/TLn3NfOXungBi0IobhEQEqx9g/Ur622xGvgwsn0lhCVD/FFKfSFCRu9j5o8lJyrbRcs9M7fztxMSo3nTs1FTbGSdsaK7UREQTirNvGLweu9/yq+kbkKxAcW4fYfkoi/hMjMoycSoOQPSmzH2k5MIbLnlzR9jza+HHBBPEKiiCn/Z0XafkGr7+H1LPffPTFCimrklD5goCgZybgy51uClwsMm3V4lOdtzfmZVV9g2FsbXBvMNGf3t7dfe8b5dL4Ahp0xDAspTE0d5lzLQAo0bYpiFiaar00yEIHrU+5T5AmvKxMx+IB+3CKivxhmk0ao+Ut14gaYb ubuntu@localhost 
+  - name: pyromaniac 
+    gecos: Ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin, sudo
+    shell: /bin/bash
+    ssh_import_id: None
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCpJL6rgCkAOmlUkvkswRxPqXpIyzsRXbB4XZEBz1JLZHKuocc55Adod8GlMG5uuCYABzvR3blXx4993DJs2EdWzQpW2XBlC47qBEG4edtqootKp8s+bkGIuP6SFUhAyIdL9krKWbLFb6uO6lkb4wp6NTUd0C+jMJZE6ELpsCGqCa/OulSh+gU5P6oPt5a+MQoayLFD40Tq+OZXDqnamHiOmaKs7MgD86BQ/OZrhApm0ICNoHB0jKu80yYyByHIx2FeR1p63dYYwVTqmFxgWjSV0uy3a0QJH7QXpW4033V+IOPl0GfI4ZhuUKdL1fOFKclOx0Os5B4nym74Myj0XOLUiNqbX/evnn5md7VUetJ/RIOVM6eAwATOxEUoscZsaHa7kv80HB6MDj7gnmjBoZi/3Hhv+cUmQ4NuNzyeKWHn68C73a2l2EhvhmK+N4ElsvW7L/B6ciyuU4XULIu1ZyXum/H8Vriu+alcMtv+57oZAlHH1j/BtTj9evc1Aqu1mms= pyromaniac@pyrohp
+     
+package_update: true
+package_upgrade: true
+packages:
+  - avahi-daemon
+write_files:
+  - content: |
+    path: /etc/skel/.bashrc
+    append: true
+

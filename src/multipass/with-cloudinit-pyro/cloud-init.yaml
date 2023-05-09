@@ -1,0 +1,21 @@
+users:
+  - default
+  - name:  pyromaniac
+    gecos: pyromaniac
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    ssh_import_id: None
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCpJL6rgCkAOmlUkvkswRxPqXpIyzsRXbB4XZEBz1JLZHKuocc55Adod8GlMG5uuCYABzvR3blXx4993DJs2EdWzQpW2XBlC47qBEG4edtqootKp8s+bkGIuP6SFUhAyIdL9krKWbLFb6uO6lkb4wp6NTUd0C+jMJZE6ELpsCGqCa/OulSh+gU5P6oPt5a+MQoayLFD40Tq+OZXDqnamHiOmaKs7MgD86BQ/OZrhApm0ICNoHB0jKu80yYyByHIx2FeR1p63dYYwVTqmFxgWjSV0uy3a0QJH7QXpW4033V+IOPl0GfI4ZhuUKdL1fOFKclOx0Os5B4nym74Myj0XOLUiNqbX/evnn5md7VUetJ/RIOVM6eAwATOxEUoscZsaHa7kv80HB6MDj7gnmjBoZi/3Hhv+cUmQ4NuNzyeKWHn68C73a2l2EhvhmK+N4ElsvW7L/B6ciyuU4XULIu1ZyXum/H8Vriu+alcMtv+57oZAlHH1j/BtTj9evc1Aqu1mms= pyromaniac@pyrohp
+package_update: true
+package_upgrade: true
+packages:
+  - avahi-daemon
+  - aria2
+write_files:
+  - content: |
+    path: /etc/skel/.bashrc
+    append: true
+

@@ -1,0 +1,9 @@
+*.box
+*.iso
+*.log
+*.vdi
+.vagrant
+SHA256SUM
+build
+output
+packer_cache

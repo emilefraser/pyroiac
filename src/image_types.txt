@@ -1,0 +1,9 @@
+qemu-img command supported formats
+
+format		type		Argument for -f and -O options
+QCOW2 		(KVM, Xen)	qcow2
+RAW		raw		raw
+VMDK 		(VMware)	vmdk
+VHD 		(Hyper-V)	vpc
+VHDX 		(Hyper-V)	vhdx
+VDI 		(VirtualBox)	vdi

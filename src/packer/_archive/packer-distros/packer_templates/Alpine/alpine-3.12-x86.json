@@ -1,0 +1,234 @@
+{
+    "builders": [
+      {
+        "boot_command": [
+          "root<enter><wait>",
+          "ifconfig eth0 up \u0026\u0026 udhcpc -i eth0<enter><wait5>",
+          "wget http://{{ .HTTPIP }}:{{ .HTTPPort }}/answers<enter><wait>",
+          "setup-apkrepos -1<enter><wait>",
+          "setup-alpine -f $PWD/answers<enter><wait>",
+          "{{user `ssh_password`}}<enter><wait5>",
+          "{{user `ssh_password`}}<enter><wait5>",
+          "y<enter>",
+          "<wait10><wait10>",
+          "reboot<enter>",
+          "<wait10><wait10><wait10>",
+          "root<enter><wait5>",
+          "{{user `ssh_password`}}<enter><wait5>",
+          "echo PermitRootLogin yes >> /etc/ssh/sshd_config<enter>",
+          "/etc/init.d/sshd restart<enter><wait>"
+        ],
+        "boot_wait": "10s",
+        "communicator": "ssh",
+        "disk_size": "{{user `disk_size`}}",
+        "format": "ova",
+        "guest_additions_mode": "disable",
+        "guest_os_type": "Linux26_64",
+        "headless": false,
+        "http_directory": "http",
+        "iso_checksum": "{{user `iso_checksum_type`}}:{{user `iso_checksum`}}",
+        "iso_urls": "{{user `iso_download_url`}}",
+        "output_directory": "{{ user `build_directory` }}/packer-{{user `template`}}-virtualbox",
+        "shutdown_command": "/sbin/poweroff",
+        "ssh_password": "{{user `ssh_password`}}",
+        "ssh_timeout": "10m",
+        "ssh_username": "root",
+        "type": "virtualbox-iso",
+        "vboxmanage": [
+          [
+            "modifyvm",
+            "{{.Name}}",
+            "--memory",
+            "{{user `memory`}}"
+          ],
+          [
+            "modifyvm",
+            "{{.Name}}",
+            "--cpus",
+            "{{user `cpus`}}"
+          ],
+          [
+            "modifyvm",
+            "{{.Name}}",
+            "--rtcuseutc",
+            "on"
+          ],
+          [
+            "modifyvm",
+            "{{.Name}}",
+            "--graphicscontroller",
+            "vmsvga"
+          ],
+          [
+            "modifyvm",
+            "{{.Name}}",
+            "--vrde",
+            "off"
+          ]
+        ],
+        "vm_name": "{{user `template`}}"
+      },
+      {
+        "boot_command": [
+          "root<enter><wait>",
+          "ifconfig eth0 up \u0026\u0026 udhcpc -i eth0<enter><wait5>",
+          "wget http://{{ .HTTPIP }}:{{ .HTTPPort }}/answers<enter><wait>",
+          "setup-apkrepos -1<enter><wait>",
+          "setup-alpine -f $PWD/answers<enter><wait>",
+          "{{user `ssh_password`}}<enter><wait5>",
+          "{{user `ssh_password`}}<enter><wait5>",
+          "y<enter>",
+          "<wait10><wait10>",
+          "reboot<enter>",
+          "<wait10><wait10><wait10>",
+          "root<enter><wait5>",
+          "{{user `ssh_password`}}<enter><wait5>",
+          "echo PermitRootLogin yes >> /etc/ssh/sshd_config<enter>",
+          "/etc/init.d/sshd restart<enter><wait>"
+        ],
+        "boot_wait": "30s",
+        "cpus": "{{ user `cpus` }}",
+        "disk_adapter_type": "{{ user `vm_disk_adapter_type` }}",
+        "disk_size": "{{ user `disk_size` }}",
+        "disk_type_id": 0,
+        "guest_os_type": "other3xlinux-64",
+        "headless": true,
+        "http_directory": "http",
+        "iso_checksum": "{{ user `iso_checksum` }}",
+        "iso_urls": "{{user `iso_download_url`}}",
+        "memory": "{{ user `memory` }}",
+        "output_directory": "{{ user `build_directory` }}/packer-{{user `template`}}-vmware",
+        "shutdown_command": "/sbin/poweroff",
+        "ssh_password": "{{ user `ssh_password` }}",
+        "ssh_timeout": "60m",
+        "ssh_username": "root",
+        "type": "vmware-iso",
+        "vm_name": "{{user `template`}}",
+        "vmx_data": {
+          "ethernet0.pciSlotNumber": "32"
+        },
+        "vmx_remove_ethernet_interfaces": false
+      },
+      {
+        "RAM": "{{ user `memory` }}",
+        "RAM_reserve_all": false,
+        "boot_command": [
+          "root<enter><wait>",
+          "ifconfig eth0 up \u0026\u0026 udhcpc -i eth0<enter><wait5>",
+          "setup-apkrepos -1<enter><wait>",
+          "mount -t vfat /dev/fd0 /media/floppy<enter><wait>",
+          "setup-alpine -f /media/floppy/ANSWERS<enter><wait5>",
+          "{{user `ssh_password`}}<enter><wait5>",
+          "{{user `ssh_password`}}<enter><wait5>",
+          "y<enter>",
+          "<wait10><wait10>",
+          "reboot<enter>",
+          "<wait10><wait10><wait10>",
+          "root<enter><wait5>",
+          "{{user `ssh_password`}}<enter><wait>",
+          "echo PermitRootLogin yes >> /etc/ssh/sshd_config<enter>",
+          "/etc/init.d/sshd restart<enter><wait>"
+        ],
+        "boot_order": "disk,cdrom",
+        "cluster": "{{user `vcenter_cluster`}}",
+        "convert_to_template": "true",
+        "cpus": "{{ user `cpus` }}",
+        "datastore": "{{user `vcenter_datastore`}}",
+        "disk_controller_type": "pvscsi",
+        "folder": "{{user `vcenter_folder`}}",
+        "guest_os_type": "other3xLinux64Guest",
+        "insecure_connection": "true",
+        "iso_checksum": "{{user `iso_checksum_type`}}:{{user `iso_checksum`}}",
+        "iso_urls": "{{user `iso_download_url`}}",
+        "network_adapters": [
+          {
+            "network": "{{user `vcenter_network`}}",
+            "network_card": "{{user `vcenter_network_card`}}"
+          }
+        ],
+        "floppy_files": [
+          "{{template_dir}}/http/answers"
+        ],
+        "notes": "{{user `notes`}}",
+        "ssh_password": "{{user `ssh_password`}}",
+        "ssh_username": "{{user `ssh_username`}}",
+        "storage": [
+          {
+            "disk_size": "{{user `disk_size`}}",
+            "disk_thin_provisioned": true
+          }
+        ],
+        "type": "vsphere-iso",
+        "username": "{{user `vcenter_username`}}",
+        "password": "{{user `vcenter_password`}}",
+        "vcenter_server": "{{user `vcenter_server`}}",
+        "vm_name": "{{user `template`}}"
+      }
+    ],
+    "description": "Build base Alpine Linux x86_64",
+    "provisioners": [
+      {
+        "environment_vars": [
+          "HOME_DIR=/home/{{ user `username` }}",
+          "http_proxy={{user `http_proxy`}}",
+          "https_proxy={{user `https_proxy`}}",
+          "no_proxy={{user `no_proxy`}}"
+        ],
+        "execute_command": "/bin/sh '{{.Path}}'",
+        "expect_disconnect": true,
+        "scripts": [
+          "{{template_dir}}/../_common/motd.sh",
+          "{{template_dir}}/../_common/sshd.sh",
+          "{{template_dir}}/scripts/update.sh",
+          "{{template_dir}}/../_common/virtualbox.sh",
+          "{{template_dir}}/scripts/vmware.sh",
+          "{{template_dir}}/../_common/parallels.sh",
+          "{{template_dir}}/scripts/add_armand.sh",
+          "{{template_dir}}/scripts/sudoers.sh",
+          "{{template_dir}}/../_common/{{ user `username` }}.sh",
+          "{{template_dir}}/scripts/minimize.sh"
+        ],
+        "type": "shell"
+      }
+    ],
+    "variables": {
+      "arch": "64",
+      "box_basename": "alpine-3.12.6",
+      "build_directory": "../../builds",
+      "build_timestamp": "{{isotime \"20060102150405\"}}",
+      "cpus": "1",
+      "disk_size": "10240",
+      "git_revision": "__unknown_git_revision__",
+      "guest_additions_url": "",
+      "headless": "true",
+      "hostname": "alpine",
+      "http_directory": "{{template_dir}}/../centos/http",
+      "http_proxy": "{{env `http_proxy`}}",
+      "https_proxy": "{{env `https_proxy`}}",
+      "iso_checksum": "fe694a34c0e2d30b9e5dea7e2c1a3892c1f14cb474b69cc5c557a52970071da5",
+      "iso_checksum_type": "sha256",
+      "iso_download_url": "http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64/alpine-virt-3.12.0-x86_64.iso",
+      "memory": "1024",
+      "name": "alpine-3.12.6",
+      "no_proxy": "{{env `no_proxy`}}",
+      "notes": "Alpine packer build",
+      "ssh_timeout": "10m",
+      "ssh_username": "root",
+      "ssh_password": "root",
+      "template": "alpine-3.12.6-x86_64",
+      "username": "armand",
+      "password": "armand",
+      "vcenter_cluster": "Home_Cluster",
+      "vcenter_datastore": "hd1-esxi1",
+      "vcenter_folder": "Templates",
+      "vcenter_network": "t3st.org_20",
+      "vcenter_network_card": "vmxnet3",
+      "vcenter_password": "xxxxx",
+      "vcenter_server": "xxxxxx",
+      "vcenter_username": "administrator@vsphere.local",
+      "version": "TIMESTAMP",
+      "vm_disk_adapter_type": "scsi"
+    }
+  }
+  
+  
